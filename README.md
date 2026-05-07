@@ -1,0 +1,2 @@
+# Designing-Explainable-Fuzzy-Architectures-for-Complex-Traffic-Risk-Scenarios
+Road safety is a global public health concern of profound magnitude. According to the World Health Organization (WHO), approximately 1.19 million people lose their lives each year in road traffic crashes, with millions more suffering non-fatal injuries. In India, the situation is particularly dire: the country accounts fornearly11%oftheworld'sroad 
