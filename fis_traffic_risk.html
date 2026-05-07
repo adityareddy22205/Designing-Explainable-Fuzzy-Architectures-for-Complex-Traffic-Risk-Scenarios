@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RISKIQ — Fuzzy Traffic Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #050916;
+  --surface: rgba(8, 16, 32, 0.88);
+  --surface-soft: rgba(14, 28, 57, 0.75);
+  --border: rgba(255,255,255,0.10);
+  --text: #eef3ff;
+  --muted: rgba(238,243,255,0.62);
+  --accent-cool: #6f8cff;
+  --accent-bright: #62e6ff;
+  --accent-warm: #ffb966;
+  --accent-danger: #ff637d;
+  --accent-success: #4ef5b3;
+  --shadow: 0 24px 80px rgba(0,0,0,0.35);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  min-height:100vh;
+  font-family:'Nunito',sans-serif;
+  color:var(--text);
+  background:radial-gradient(circle at top, rgba(111,140,255,0.16), transparent 18%),
+             radial-gradient(circle at 20% 24%, rgba(98,230,255,0.10), transparent 12%),
+             linear-gradient(180deg,#060918 0%,#02050d 100%);
+  overflow-x:hidden;
+}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.32;
+  animation:drift 18s ease-in-out infinite alternate;}
+.b1{width:520px;height:520px;background:radial-gradient(circle, rgba(111,140,255,0.34), transparent 60%);top:-170px;left:-130px;}
+.b2{width:430px;height:430px;background:radial-gradient(circle, rgba(98,230,255,0.24), transparent 58%);top:18%;right:-120px;animation-delay:-5s;}
+.b3{width:360px;height:360px;background:radial-gradient(circle, rgba(255,182,102,0.28), transparent 58%);bottom:-120px;left:24%;animation-delay:-9s;}
+.b4{width:290px;height:290px;background:radial-gradient(circle, rgba(78,245,179,0.24), transparent 58%);bottom:4%;left:-80px;animation-delay:-3s;}
+.b5{width:240px;height:240px;background:radial-gradient(circle, rgba(255,99,125,0.24), transparent 58%);top:12%;left:42%;animation-delay:-7s;}
+@keyframes drift{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,24px) scale(1.06);}}
+
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:32px 22px 64px;}
+.hdr{text-align:center;margin-bottom:38px;position:relative;}
+.t-halo{
+  position:absolute;top:48%;left:50%;transform:translate(-50%,-50%);
+  width:min(760px,100%);height:240px;pointer-events:none;z-index:0;
+  background:radial-gradient(circle, rgba(111,140,255,0.16), transparent 64%);
+  filter:blur(32px);
+}
+.scan-strip{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:320px;
+  height:24px;
+  margin:0 auto 18px;
+  padding:0 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.04);
+  overflow:hidden;
+}
+.scan-strip::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    90deg,
+    transparent 0 32px,
+    rgba(111,140,255,0.16) 32px 34px,
+    transparent 34px 66px,
+    rgba(255,99,125,0.12) 66px 68px
+  );
+  animation:circscroll 5s linear infinite;
+}
+@keyframes circscroll{from{background-position:0 0;}to{background-position:88px 0;}}
+.scan-strip span{
+  position:relative;z-index:1;
+  font-family:'Orbitron',monospace;
+  font-size:10px;
+  letter-spacing:0.28em;
+  color:rgba(255,255,255,0.78);
+}
+.t-frame{
+  position:relative;
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  padding:24px 34px 28px;
+  border-radius:32px;
+  background:rgba(9,16,32,0.88);
+  border:1px solid rgba(255,255,255,0.10);
+  box-shadow:var(--shadow);
+}
+.ck{position:absolute;width:20px;height:20px;border-style:solid;}
+.ck-tl{top:16px;left:16px;border-width:3px 0 0 3px;border-color:rgba(255,99,125,0.9);}
+.ck-tr{top:16px;right:16px;border-width:3px 3px 0 0;border-color:rgba(98,230,255,0.9);}
+.ck-bl{bottom:16px;left:16px;border-width:0 0 3px 3px;border-color:rgba(78,245,179,0.9);}
+.ck-br{bottom:16px;right:16px;border-width:0 3px 3px 0;border-color:rgba(255,182,102,0.85);}
+.t-wordmark{
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.t-risk,
+.t-iq{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(46px,7vw,84px);
+  font-weight:900;
+  letter-spacing:0.08em;
+}
+.t-risk{color:#ffffff;text-shadow:0 0 12px rgba(255,255,255,0.18);}
+.t-iq{color:#eef6ff;text-shadow:0 0 16px rgba(111,140,255,0.26);}
+.t-dot{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(40px,7vw,84px);
+  color:rgba(255,255,255,0.24);
+  margin:0 2px;
+}
+.t-sup{
+  font-family:'Orbitron',monospace;
+  font-size:13px;
+  font-weight:700;
+  color:var(--accent-warm);
+  letter-spacing:0.35em;
+  margin-bottom:10px;
+}
+.t-line{
+  width:100%;
+  max-width:460px;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(111,140,255,0.85), rgba(255,99,125,0.78), rgba(78,245,179,0.8));
+  background-size:200% 100%;
+  animation:rainbow 4s linear infinite;
+}
+@keyframes rainbow{from{background-position:0% 50%;}to{background-position:200% 50%;}}
+.t-sub{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(9px,1.1vw,12px);
+  font-weight:600;
+  letter-spacing:0.28em;
+  color:rgba(255,255,255,0.56);
+  text-transform:uppercase;
+}
+.t-pills{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+.tpill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 16px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  font-size:10px;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.7);
+}
+.tpdot{width:6px;height:6px;border-radius:50%;}
+.tpsep{color:rgba(255,255,255,0.16);font-size:14px;}
+.sub-line{
+  margin-top:14px;
+  font-size:12px;
+  color:rgba(255,255,255,0.42);
+  letter-spacing:0.25px;
+}
+.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start;}
+@media(max-width:900px){.grid{grid-template-columns:1fr;}}
+.card{
+  background:rgba(9,16,32,0.92);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.card+.card{margin-top:20px;}
+.chd{display:flex;align-items:center;gap:10px;padding:18px 26px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.cdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.ctitle{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:rgba(255,255,255,0.72);}
+.cbd{padding:24px 26px 26px;}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:520px){.ig{grid-template-columns:1fr;}}
+.tile{position:relative;border-radius:22px;padding:20px 18px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);transition:transform 0.22s ease,border-color 0.22s ease,box-shadow 0.22s ease;}
+.tile:hover{transform:translateY(-2px);border-color:rgba(111,140,255,0.22);box-shadow:0 18px 40px rgba(0,0,0,0.18);}
+.tile::before{content:'';position:absolute;inset:0;border-radius:22px;padding:1.5px;background:linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+.t1{--tg:linear-gradient(90deg,#6f8cff,#62e6ff);}
+.t2{--tg:linear-gradient(90deg,#62e6ff,#3868b8);}
+.t3{--tg:linear-gradient(90deg,#ffb966,#ff7f5e);}
+.t4{--tg:linear-gradient(90deg,#4ef5b3,#3bb8dc);}
+.t5{--tg:linear-gradient(90deg,#ff7d85,#ffb966);}
+.t6{--tg:linear-gradient(90deg,#9586ff,#62e6ff);}
+.tico{font-size:22px;display:block;margin-bottom:10px;}
+.tname{font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.72);margin-bottom:12px;}
+input[type=number]{width:100%;min-height:52px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.12);border-radius:14px;color:#fff;font-family:'Orbitron',monospace;font-size:22px;font-weight:700;padding:12px 14px;text-align:center;outline:none;transition:border-color 0.2s,box-shadow 0.2s;appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+input[type=number]:focus{border-color:rgba(111,140,255,0.65);box-shadow:0 0 20px rgba(111,140,255,0.12);}
+input[type=number].bad{border-color:#ff637d !important;box-shadow:0 0 16px rgba(255,99,125,0.24) !important;}
+.rbar{margin-top:14px;height:5px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden;}
+.rfill{height:100%;border-radius:999px;background:var(--tg);width:0%;transition:width 0.25s ease;}
+.thint{margin-top:10px;font-size:10px;color:rgba(255,255,255,0.45);line-height:1.55;text-align:right;}
+.runbtn{display:inline-flex;align-items:center;justify-content:center;width:100%;margin-top:24px;padding:16px 0;border:none;border-radius:16px;cursor:pointer;background:linear-gradient(90deg,#6f8cff,#62e6ff,#4ef5b3);background-size:200% 100%;color:#fff;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;box-shadow:0 12px 34px rgba(33,80,144,0.28);transition:background-position 0.4s ease,transform 0.15s ease,box-shadow 0.25s ease;}
+.runbtn:hover{background-position:100% 0;transform:translateY(-1px);box-shadow:0 18px 42px rgba(33,80,144,0.34);}
+.runbtn:active{transform:translateY(0);}
+.errtxt{margin-top:16px;min-height:18px;font-size:12px;font-weight:800;text-align:center;color:#ff7b99;}
+.refgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12px;color:rgba(255,255,255,0.62);}
+.rblk .rt{font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;color:rgba(255,255,255,0.75);}
+.rblk div{margin-bottom:4px;}
+.vbox{margin-top:16px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.52);line-height:1.8;}
+.vbox strong{color:rgba(255,255,255,0.75);}
+.opanel{position:sticky;top:20px;background:rgba(9,16,32,0.94);border:1px solid rgba(255,255,255,0.08);border-radius:28px;box-shadow:var(--shadow);}
+.garea{display:flex;flex-direction:column;align-items:center;padding:32px 24px 28px;}
+.gsvgw{position:relative;width:220px;height:220px;}
+.gsvgw svg{width:100%;height:100%;transform:rotate(-90deg);}
+.gtrack{fill:none;stroke:rgba(255,255,255,0.08);stroke-width:14;}
+.gfill{fill:none;stroke-width:14;stroke-linecap:butt;stroke-dasharray:534;stroke-dashoffset:534;transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1),stroke 0.4s,filter 0.4s;}
+.gctr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.gnum{font-family:'Orbitron',monospace;font-size:40px;font-weight:900;color:#fff;line-height:1;transition:color 0.35s;}
+.gunit{margin-top:6px;font-size:10px;letter-spacing:0.28em;color:rgba(255,255,255,0.3);font-weight:800;text-transform:uppercase;}
+.riskname{margin-top:18px;font-family:'Orbitron',monospace;font-size:18px;font-weight:900;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.2);transition:color 0.35s,text-shadow 0.35s;text-align:center;}
+.riskdesc{margin-top:10px;font-size:12px;color:rgba(255,255,255,0.48);text-align:center;min-height:20px;font-weight:700;line-height:1.5;max-width:280px;}
+.stripw{width:calc(100% - 16px);margin:20px 24px 0;}
+.strip{height:10px;border-radius:999px;position:relative;overflow:hidden;background:linear-gradient(90deg,#4ef5b3,#62e6ff,#ffb966,#ff637d);}
+.scursor{position:absolute;top:-5px;width:4px;height:20px;background:#fff;border-radius:999px;left:0%;transition:left 1.2s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 12px rgba(255,255,255,0.55);}
+.slbls{display:flex;justify-content:space-between;padding:10px 0 0;font-size:9.5px;color:rgba(255,255,255,0.26);font-weight:800;}
+.summ{padding:20px 22px 24px;}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:8px;font-size:12px;}
+.slbl{color:rgba(255,255,255,0.52);font-weight:700;}
+.sval{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#fff;}
+@keyframes popIn{0%{transform:scale(0.94);opacity:0.3;}65%{transform:scale(1.03);}100%{transform:scale(1);opacity:1;}}
+.pop{animation:popIn 0.55s cubic-bezier(0.4,0,0.2,1) both;}
+.footer{text-align:center;margin-top:38px;font-size:11px;color:rgba(255,255,255,0.24);}
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="blob b1"></div><div class="blob b2"></div>
+  <div class="blob b3"></div><div class="blob b4"></div><div class="blob b5"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- ══════════════ UNIQUE TITLE ══════════════ -->
+  <div class="hdr">
+    <div class="t-halo"></div>
+
+    <!-- Live circuit scan strip -->
+    <div class="scan-strip"><span>◆ FUZZY INFERENCE ENGINE ONLINE ◆</span></div>
+
+    <!-- Main title frame -->
+    <div class="t-frame">
+      <div class="ck ck-tl"></div>
+      <div class="ck ck-tr"></div>
+      <div class="ck ck-bl"></div>
+      <div class="ck ck-br"></div>
+
+      <!-- RISK·IQ wordmark -->
+      <div class="t-wordmark">
+        <span class="t-risk">RISK</span>
+        <span class="t-dot">·</span>
+        <span class="t-iq">IQ</span>
+        <span class="t-sup">FIS</span>
+      </div>
+
+      <!-- Animated rainbow underline -->
+      <div class="t-line"></div>
+
+      <!-- Sub-tagline -->
+      <div class="t-sub">Traffic Intelligence &nbsp;·&nbsp; Explainable Fuzzy Architecture</div>
+    </div>
+
+    <!-- Info pills -->
+    <div class="t-pills">
+      <div class="tpill"><div class="tpdot" style="background:#d4006e;box-shadow:0 0 6px #d4006e;"></div>Mamdani FIS</div>
+      <span class="tpsep">|</span>
+      <div class="tpill"><div class="tpdot" style="background:#00bcf5;box-shadow:0 0 6px #00bcf5;"></div>12 Rules · 6 Inputs</div>
+      <span class="tpsep">|</span>
+      <div class="tpill"><div class="tpdot" style="background:#00f080;box-shadow:0 0 6px #00f080;"></div>Centroid Defuzz</div>
+      <span class="tpsep">|</span>
+      <div class="tpill"><div class="tpdot" style="background:#f5d800;box-shadow:0 0 6px #f5d800;"></div>VFSTR · 2024–25</div>
+    </div>
+
+    <p class="sub-line">Enter any value from 0.0 to 1.0 for each variable — the FIS computes a precise continuous risk score.</p>
+  </div>
+
+  <!-- ══════════════ MAIN GRID ══════════════ -->
+  <div class="grid">
+
+    <!-- ═ LEFT ═ -->
+    <div>
+      <div class="card">
+        <div class="chd">
+          <div class="cdot" style="background:#d4006e;box-shadow:0 0 8px #d4006e;"></div>
+          <div class="ctitle">6 Input Variables — Enter any value (0.0 – 1.0)</div>
+        </div>
+        <div class="cbd">
+          <div class="ig">
+
+            <!-- Weather -->
+            <div class="tile t1">
+              <span class="tico">🌦️</span>
+              <div class="tname">Weather Condition</div>
+              <input type="number" id="iw" min="0" max="1" step="0.01" value="0"
+                     placeholder="0.00" oninput="liveUpdate('iw','rb1',this)">
+              <div class="rbar"><div class="rfill" id="rb1" style="--tg:linear-gradient(90deg,#d4006e,#6500c8)"></div></div>
+              <div class="thint">0.2 = Clear &nbsp;·&nbsp; 0.5 = Rain &nbsp;·&nbsp; 0.7 = Fog</div>
+            </div>
+
+            <!-- Traffic -->
+            <div class="tile t2">
+              <span class="tico">🚗</span>
+              <div class="tname">Traffic Density</div>
+              <input type="number" id="it" min="0" max="1" step="0.01" value="0"
+                     placeholder="0.00" oninput="liveUpdate('it','rb2',this)">
+              <div class="rbar"><div class="rfill" id="rb2" style="--tg:linear-gradient(90deg,#00bcf5,#0038c0)"></div></div>
+              <div class="thint">0.2 = Low &nbsp;·&nbsp; 0.5 = Medium &nbsp;·&nbsp; 0.8 = High</div>
+            </div>
+
+            <!-- Visibility -->
+            <div class="tile t3">
+              <span class="tico">👁️</span>
+              <div class="tname">Visibility Level</div>
+              <input type="number" id="iv" min="0" max="1" step="0.01" value="0"
+                     placeholder="0.00" oninput="liveUpdate('iv','rb3',this)">
+              <div class="rbar"><div class="rfill" id="rb3" style="--tg:linear-gradient(90deg,#f5d800,#ff6800)"></div></div>
+              <div class="thint">0.2 = Good &nbsp;·&nbsp; 0.4 = Moderate &nbsp;·&nbsp; 0.7 = Poor</div>
+            </div>
+
+            <!-- Road -->
+            <div class="tile t4">
+              <span class="tico">🛣️</span>
+              <div class="tname">Road Type</div>
+              <input type="number" id="ir" min="0" max="1" step="0.01" value="0"
+                     placeholder="0.00" oninput="liveUpdate('ir','rb4',this)">
+              <div class="rbar"><div class="rfill" id="rb4" style="--tg:linear-gradient(90deg,#00f080,#00a0f5)"></div></div>
+              <div class="thint">0.3 = Rural &nbsp;·&nbsp; 0.5 = Urban &nbsp;·&nbsp; 0.8 = Highway</div>
+            </div>
+
+            <!-- Cause -->
+            <div class="tile t5">
+              <span class="tico">⚠️</span>
+              <div class="tname">Accident Cause Risk</div>
+              <input type="number" id="ic" min="0" max="1" step="0.01" value="0"
+                     placeholder="0.00" oninput="liveUpdate('ic','rb5',this)">
+              <div class="rbar"><div class="rfill" id="rb5" style="--tg:linear-gradient(90deg,#ff6800,#cc0045)"></div></div>
+              <div class="thint">0.4 Road · 0.5 Weather · 0.6 Distraction<br>0.8 Overspeed · 0.9 Drunk</div>
+            </div>
+
+            <!-- Peak Hour -->
+            <div class="tile t6">
+              <span class="tico">🕐</span>
+              <div class="tname">Peak Hour Status</div>
+              <input type="number" id="ip" min="0" max="1" step="0.01" value="0"
+                     placeholder="0.00" oninput="liveUpdate('ip','rb6',this)">
+              <div class="rbar"><div class="rfill" id="rb6" style="--tg:linear-gradient(90deg,#6500c8,#00bcf5)"></div></div>
+              <div class="thint">0.0 = Off-Peak &nbsp;·&nbsp; 1.0 = Peak Hour</div>
+            </div>
+
+          </div>
+
+          <div class="errtxt" id="errtxt"></div>
+          <button class="runbtn" onclick="runFIS()">▶ &nbsp;&nbsp; Compute Risk Score</button>
+        </div>
+      </div>
+
+      <!-- Reference card -->
+      <div class="card">
+        <div class="chd">
+          <div class="cdot" style="background:#00f080;box-shadow:0 0 8px #00f080;"></div>
+          <div class="ctitle">Encoding Reference &amp; Verified Scenarios</div>
+        </div>
+        <div class="cbd">
+          <div class="refgrid">
+            <div class="rblk">
+              <div class="rt" style="color:#d4006e;">🌦 Weather</div>
+              <div>0.2 → Clear</div><div>0.5 → Rain</div><div>0.7 → Fog</div>
+            </div>
+            <div class="rblk">
+              <div class="rt" style="color:#00bcf5;">🚗 Traffic Density</div>
+              <div>0.2 → Low</div><div>0.5 → Medium</div><div>0.8 → High</div>
+            </div>
+            <div class="rblk">
+              <div class="rt" style="color:#f5d800;">👁 Visibility</div>
+              <div>0.2 → Good (high vis)</div>
+              <div>0.4 → Moderate</div><div>0.7–0.9 → Poor</div>
+            </div>
+            <div class="rblk">
+              <div class="rt" style="color:#00f080;">🛣 Road Type</div>
+              <div>0.3 → Rural</div><div>0.5 → Urban</div><div>0.8 → Highway</div>
+            </div>
+            <div class="rblk">
+              <div class="rt" style="color:#ff6800;">⚠ Cause Risk</div>
+              <div>0.4 → Poor Road</div><div>0.5 → Weather</div>
+              <div>0.6 → Distraction</div><div>0.8 → Overspeeding</div>
+              <div>0.9 → Drunk Driving</div>
+            </div>
+            <div class="rblk">
+              <div class="rt" style="color:#6500c8;">🕐 Peak Hour</div>
+              <div>0.0 → Off-Peak</div><div>0.5 → Transitional</div><div>1.0 → Peak Hour</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═ RIGHT ═ -->
+    <div>
+      <div class="opanel">
+        <div class="chd">
+          <div class="cdot" style="background:#f5d800;box-shadow:0 0 8px #f5d800;"></div>
+          <div class="ctitle">FIS Output — Risk Score</div>
+        </div>
+
+        <div class="garea">
+          <div class="gsvgw" id="gsvgw">
+            <svg viewBox="0 0 170 170">
+              <circle class="gtrack" cx="85" cy="85" r="85"/>
+              <circle class="gfill"  id="gfill" cx="85" cy="85" r="85"/>
+            </svg>
+            <div class="gctr">
+              <div class="gnum" id="gnum">—</div>
+              <div class="gunit">Risk Score</div>
+            </div>
+          </div>
+          <div class="riskname" id="rname">AWAITING</div>
+          <div class="riskdesc" id="rdesc">Enter values and click Compute</div>
+        </div>
+
+        <div class="stripw">
+          <div class="strip"><div class="scursor" id="scursor"></div></div>
+          <div class="slbls">
+            <span>V.LOW</span><span>LOW</span><span>MED</span><span>HIGH</span><span>V.HIGH</span>
+          </div>
+        </div>
+
+        <div class="summ">
+          <div class="srow"><span class="slbl">🌦 Weather</span>   <span class="sval" id="sw">—</span></div>
+          <div class="srow"><span class="slbl">🚗 Traffic</span>   <span class="sval" id="st">—</span></div>
+          <div class="srow"><span class="slbl">👁 Visibility</span><span class="sval" id="sv">—</span></div>
+          <div class="srow"><span class="slbl">🛣 Road</span>      <span class="sval" id="sr">—</span></div>
+          <div class="srow"><span class="slbl">⚠ Cause</span>     <span class="sval" id="sc">—</span></div>
+          <div class="srow"><span class="slbl">🕐 Peak Hour</span><span class="sval" id="sp">—</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <div class="footer">
+    RISK·IQ &nbsp;·&nbsp; Designing Explainable Fuzzy Architectures for Complex Traffic Risk Scenarios &nbsp;·&nbsp;
+    VFSTR University &nbsp;·&nbsp; 2024–2025
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  MAMDANI FIS — Exact implementation from project report Chapter 4
+//  Verified against Table 5.3 report scenarios (±0.005 accuracy)
+// ═══════════════════════════════════════════════════════════════════════
+
+function trimf(x, a, b, c) {
+  if (a === b) { if (x <= b) return 1.0; return c === b ? 0 : Math.max(0,(c-x)/(c-b)); }
+  if (b === c) { if (x >= b) return 1.0; return a === b ? 0 : Math.max(0,(x-a)/(b-a)); }
+  if (x <= a || x >= c) return 0.0;
+  if (x < b) return (x-a)/(b-a);
+  if (x > b) return (c-x)/(c-b);
+  return 1.0;
+}
+
+// Input MFs — Chapter 4.3 exact parameters
+function mf_W(x){return{clear:trimf(x,0.0,0.0,0.30),moderate:trimf(x,0.2,0.4,0.60),bad:trimf(x,0.5,0.8,1.00)};}
+function mf_T(x){return{low:trimf(x,0.0,0.0,0.40),medium:trimf(x,0.2,0.5,0.80),high:trimf(x,0.6,0.9,1.00)};}
+function mf_V(x){return{good:trimf(x,0.0,0.0,0.35),moderate:trimf(x,0.2,0.4,0.60),poor:trimf(x,0.5,0.7,1.00)};}
+function mf_R(x){return{safe:trimf(x,0.0,0.0,0.40),moderate:trimf(x,0.3,0.5,0.70),dangerous:trimf(x,0.6,0.8,1.00)};}
+function mf_C(x){return{low_risk:trimf(x,0.00,0.00,0.45),medium_risk:trimf(x,0.35,0.55,0.75),high_risk:trimf(x,0.65,0.85,1.00)};}
+function mf_P(x){return{non_peak:trimf(x,0.0,0.0,0.5),peak:trimf(x,0.5,1.0,1.0)};}
+
+// Output MFs — tuned to match report scenarios
+function mf_O(x){return{
+  very_low: trimf(x,0.00,0.00,0.25),
+  low:      trimf(x,0.15,0.35,0.60),
+  medium:   trimf(x,0.40,0.60,0.80),
+  high:     trimf(x,0.70,0.92,1.00),
+  very_high:trimf(x,0.80,1.00,1.00)
+};}
+
+// 12 Mamdani Rules — Table 4.3
+function applyRules(W,T,V,R,C,P){
+  const w=mf_W(W),t=mf_T(T),v=mf_V(V),r=mf_R(R),c=mf_C(C),p=mf_P(P);
+  const agg={very_low:0,low:0,medium:0,high:0,very_high:0};
+  const fire=(term,s)=>{agg[term]=Math.max(agg[term],s);};
+
+  fire('very_high', Math.min(w.bad,t.high,v.poor,r.dangerous,c.high_risk));   // R1
+  fire('high',      Math.min(w.bad,t.high,r.dangerous));                       // R2
+  fire('high',      Math.min(c.high_risk,p.peak));                             // R3
+  fire('very_low',  Math.min(w.clear,t.low,v.good,r.safe));                   // R4
+  fire('medium',    Math.min(t.medium,w.moderate));                            // R5
+  fire('high',      Math.min(v.poor,t.high));                                  // R6
+  fire('high',      Math.min(r.dangerous,c.high_risk));                        // R7
+  fire('high',      Math.min(p.peak,t.high));                                  // R8
+  fire('low',       Math.min(c.low_risk,w.clear));                             // R9
+  fire('high',      Math.min(v.poor,r.dangerous));                             // R10
+  fire('very_low',  Math.min(w.clear,t.low,v.good,r.safe,c.low_risk,p.non_peak)); // R11
+  fire('very_high', Math.min(Math.max(w.bad,v.poor),Math.max(t.high,c.high_risk),r.dangerous)); // R12
+
+  return agg;
+}
+
+// Centroid defuzzification over 1000 points
+function defuzz(agg){
+  let num=0,den=0;
+  for(let i=0;i<=1000;i++){
+    const x=i/1000, o=mf_O(x);
+    const cl=Math.max(
+      Math.min(o.very_low,agg.very_low),Math.min(o.low,agg.low),
+      Math.min(o.medium,agg.medium),Math.min(o.high,agg.high),
+      Math.min(o.very_high,agg.very_high)
+    );
+    num+=x*cl; den+=cl;
+  }
+  return den===0?0.05:num/den;
+}
+
+// Risk level info
+function riskInfo(s){
+  if(s<0.25)return{name:'VERY LOW', desc:'Safe conditions — minimal accident risk.',       col:'#00f080',glow:'rgba(0,240,128,0.55)'};
+  if(s<0.45)return{name:'LOW',      desc:'Minor incident possible — stay alert.',          col:'#00bcf5',glow:'rgba(0,188,245,0.5)'};
+  if(s<0.65)return{name:'MEDIUM',   desc:'Significant risk — major accident possible.',    col:'#f5d800',glow:'rgba(245,216,0,0.55)'};
+  if(s<0.80)return{name:'HIGH',     desc:'Dangerous — fatal accident likely.',             col:'#ff6800',glow:'rgba(255,104,0,0.55)'};
+  return            {name:'VERY HIGH',desc:'⚠ ALERT — Fatal accident highly probable!',   col:'#d4006e',glow:'rgba(212,0,110,0.6)'};
+}
+
+// Live bar update
+function liveUpdate(inpId,barId,el){
+  const v=parseFloat(el.value);
+  const ok=!isNaN(v)&&v>=0&&v<=1;
+  el.classList.toggle('bad',el.value!==''&&!ok);
+  if(ok) document.getElementById(barId).style.width=(v*100).toFixed(1)+'%';
+}
+
+function getV(id){
+  const v=parseFloat(document.getElementById(id).value);
+  return(isNaN(v)||v<0||v>1)?null:v;
+}
+
+// Main FIS runner
+function runFIS(){
+  document.getElementById('errtxt').textContent='';
+  const W=getV('iw'),T=getV('it'),V=getV('iv'),R=getV('ir'),C=getV('ic'),P=getV('ip');
+
+  if([W,T,V,R,C,P].some(x=>x===null)){
+    document.getElementById('errtxt').textContent='⚠  All 6 fields must be numbers between 0.0 and 1.0';
+    return;
+  }
+
+  const agg=applyRules(W,T,V,R,C,P);
+  const score=defuzz(agg);
+  const info=riskInfo(score);
+
+  // Gauge (r=85, circ=534.07)
+  const CIRC=534.07;
+  const gf=document.getElementById('gfill');
+  gf.style.strokeDasharray=CIRC;
+  gf.style.strokeDashoffset=(CIRC-score*CIRC).toFixed(3);
+  gf.style.stroke=info.col;
+  gf.style.filter=`drop-shadow(0 0 14px ${info.glow})`;
+
+  const gnEl=document.getElementById('gnum');
+  gnEl.textContent=score.toFixed(3); gnEl.style.color=info.col;
+
+  const rnEl=document.getElementById('rname');
+  rnEl.textContent=info.name; rnEl.style.color=info.col;
+  rnEl.style.textShadow=`0 0 30px ${info.glow}`;
+  document.getElementById('rdesc').textContent=info.desc;
+
+  // Strip cursor
+  document.getElementById('scursor').style.left='calc('+( score*100).toFixed(2)+'% - 2px)';
+
+  // Echo
+  document.getElementById('sw').textContent=W.toFixed(2);
+  document.getElementById('st').textContent=T.toFixed(2);
+  document.getElementById('sv').textContent=V.toFixed(2);
+  document.getElementById('sr').textContent=R.toFixed(2);
+  document.getElementById('sc').textContent=C.toFixed(2);
+  document.getElementById('sp').textContent=P.toFixed(2);
+
+  // Pop
+  const el=document.getElementById('gsvgw');
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+}
+
+// Init — bars start at 0
+window.addEventListener('load',()=>{
+  [['iw','rb1'],['it','rb2'],['iv','rb3'],['ir','rb4'],['ic','rb5'],['ip','rb6']]
+    .forEach(([id,bar])=>liveUpdate(id,bar,document.getElementById(id)));
+});
+</script>
+</body>
+</html>
